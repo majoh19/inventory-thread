@@ -7,7 +7,7 @@ import com.iudigital.actividad.supermercado.sinHilos.utils.GenerarProductos;
 
 public class MainHilos {
     
-    private static final int numeroProductos = 90000000;
+    private static final int numeroProductos = 90;
     private static final int numeroHilos = 4;
     
     public static void main(String[] args) throws InterruptedException {
@@ -26,7 +26,7 @@ public class MainHilos {
         imprimirVector(C);
         
         System.out.println("Valor más alto en los pedidos: " + maxPedido);
-        System.out.println("Tiempo de ejecución con hilos: " + (tiempoFin - tiempoInicio)/1000 + " segundos");
+        //System.out.println("Tiempo de ejecución con hilos: " + (tiempoFin - tiempoInicio) + " segundos");
     }
     
     private static void calcularStockHilos(Producto[] A, Pedido[] B, int[] C) throws InterruptedException {
@@ -51,7 +51,19 @@ public class MainHilos {
         int maxPedido = 0;
         
         for (Pedido pedido : B) {
-            
+            for (Producto producto : pedido.getProductos()) {
+                if (producto.getExistencia()>maxPedido) {
+                    maxPedido = producto.getExistencia();
+                }
+            }
         }
+        return maxPedido;
+    }
+    
+    private static void imprimirVector(int[] vector) {
+        for (int i=0; i<vector.length; i++) {
+            System.out.print(vector[i] + " ");
+        }
+        System.out.println();
     }
 }
