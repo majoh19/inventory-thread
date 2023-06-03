@@ -4,49 +4,49 @@ import com.iudigital.actividad.supermercado.sinHilos.models.Pedido;
 import com.iudigital.actividad.supermercado.sinHilos.models.Producto;
 
 public class HiloStock extends Thread {
+    
+    private Pedido pedido;
+    private Producto[] productos;
 
-    private Producto[] A;
-    private Pedido[] B;
-    private int inicio;
-    private int fin;
-
-    public HiloStock(Producto[] A, Pedido[] B, int inicio, int fin) {
-        this.A = A;
-        this.B = B;
-        this.inicio = inicio;
-        this.fin = fin;
+    public HiloStock(Pedido pedido, Producto[] productos) {
+        this.pedido = pedido;
+        this.productos = productos;
     }
 
     @Override
     public void run() {
-
-        for (int i = inicio; i < fin; i++) {
-            Producto producto = A[i];
-            Pedido pedido = B[i];
-
-            int existenciaProducto = producto.getExistencia();
-            int cantidadPedido = obtenerCantidadPedido(pedido, producto);
-
-            if (existenciaProducto == cantidadPedido) {
-                producto.setExistencia(0);
-            } else if (existenciaProducto > cantidadPedido) {
-                producto.setExistencia(existenciaProducto - cantidadPedido);
-            } else {
-                producto.setExistencia(0);
+        
+        System.out.println("Calculando stock para el cliente " + pedido.getIdCliente());
+        
+        for (Producto productoPedido : pedido.getProductos()) {
+            int idProducto = productoPedido.getId();
+            Producto productoInventario = productos[idProducto - 1];
+            
+            synchronized (productoInventario) {
+                int stockActual = productoInventario.getStock();
+                int cantidadPedido = productoPedido.getStock();
+                int cantidadComprar = calcularCantidadComprar(stockActual, cantidadPedido);
+                
+                productoInventario.setStock(stockActual - cantidadComprar);
+                
+                System.out.println("Cliente: " + pedido.getIdCliente() + 
+                        " - Producto: " + idProducto + 
+                        " - Stock Actual: " + stockActual + 
+                        " - Cantidad Pedido: " + cantidadPedido + 
+                        " - Cantidad a comprar: " + cantidadComprar + 
+                        " - Nuevo Stock: " + productoInventario.getStock());
             }
         }
+        
+        System.out.println("Finalizó el cálculo de stock para el cliente: " + pedido.getIdCliente());
     }
-
-    private int obtenerCantidadPedido(Pedido pedido, Producto producto) {
-
-        int cantidad = 0;
-
-        for (Producto p : pedido.getProductos()) {
-            if (p.getNombre().equals(producto.getNombre())) {
-                cantidad++;
-            }
-        }
-        return cantidad;
+    
+    private int calcularCantidadComprar(int stockActual, int cantidadPedido) {
+    if (stockActual >= cantidadPedido) {
+        return cantidadPedido;
+    } else {
+        return 0;
     }
+}
 
 }

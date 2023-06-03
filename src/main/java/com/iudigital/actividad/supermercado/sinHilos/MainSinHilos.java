@@ -2,84 +2,64 @@ package com.iudigital.actividad.supermercado.sinHilos;
 
 import com.iudigital.actividad.supermercado.sinHilos.models.Pedido;
 import com.iudigital.actividad.supermercado.sinHilos.models.Producto;
-import com.iudigital.actividad.supermercado.sinHilos.utils.GenerarPedidos;
-import com.iudigital.actividad.supermercado.sinHilos.utils.GenerarProductos;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainSinHilos {
     
-    private static final int numeroProductos = 90;
-    
     public static void main(String[] args) {
         
-        Producto[] A = GenerarProductos.generarProductos(numeroProductos).toArray(new Producto[0]);
-        Pedido[] B = GenerarPedidos.generarPedidos(GenerarProductos.generarProductos(numeroProductos), numeroProductos).toArray(new Pedido[0]);
+        Producto[] productos = generarProductos(90);
         
-        int[] C = new int[numeroProductos];
+        System.out.println("Inventario inicial:");
+        mostrarInventario(productos);
         
-        long tiempoInicio = System.currentTimeMillis();
-        calcularStock(A, B, C);
-        long tiempoFin = System.currentTimeMillis();
+        List<Pedido> pedidos = generarPedidos(productos.length, 10);
+        System.out.println("Pedidos generados:");
+        mostrarPedidos(pedidos);
         
-        int maxPedido = encontrarMaximoPedido(B);
+        Stock.calcularStock(pedidos, productos);
         
-        System.out.println("Stock: ");
-        imprimirVector(C);
-        
-        System.out.println("Valor más alto en los pedidos: " + maxPedido);
-        //System.out.println("Tiempo de ejecución sin hilos: " + (tiempoFin - tiempoInicio)/1000 + " segundos");    
+        System.out.println("Inventario final:");
+        mostrarInventario(productos);
     }
     
-    private static void calcularStock(Producto[] A, Pedido[] B, int[] C) {
-        for (int i=0; i<numeroProductos; i++) {
-            Producto producto = A[i];
-            Pedido pedido = B[i];
-            
-            int existenciaProducto = producto.getExistencia();
-            int cantidadPedido = obtenerCantidadPedido(pedido, producto);
-            
-            if (existenciaProducto == cantidadPedido) {
-                producto.setExistencia(0);
-            } else if (existenciaProducto>cantidadPedido) {
-                producto.setExistencia(existenciaProducto-cantidadPedido);
-            } else {
-                producto.setExistencia(0);
-            }
-            
-            C[i] = cantidadPedido;
+    private static Producto[] generarProductos(int cantidad) {
+        
+        Producto[] productos = new Producto[cantidad];
+        
+        for (int i=0; i<cantidad; i++) {
+            int idProducto = i + 1;
+            int stockProducto = (int) (Math.random() * 1000) + 1;
+            productos[i] = new Producto(idProducto, stockProducto);
+        }
+        return productos;
+    }
+    
+    private static List<Pedido> generarPedidos(int cantidadProductos, int cantidadPedidos) {
+        
+        List<Pedido> pedidos = new ArrayList<>();
+        
+        for (int i=0; i<cantidadPedidos; i++) {
+            Pedido pedido = new Pedido(i + 1);
+            pedidos.add(pedido);
+        }
+        return pedidos;
+    }
+    
+    private static void mostrarInventario(Producto[] productos) {
+        for (Producto producto : productos) {
+            System.out.println("Producto " + producto.getId() + " - Stock: " + producto.getStock());
         }
     }
     
-    private static int obtenerCantidadPedido(Pedido pedido, Producto producto) {
-        
-        int cantidad = 0;
-        
-        for (Producto p : pedido.getProductos()) {
-            if ( p.getNombre().equals(producto.getNombre())) {
-                cantidad++;
-            }
-        }
-        return cantidad;
-    }
-    
-    private static int encontrarMaximoPedido(Pedido[] B) {
-        
-        int maxPedido = 0;
-        
-        for (Pedido pedido : B) {
-            for (Producto producto : pedido.getProductos()) {
-                if (producto.getExistencia()>maxPedido) {
-                    maxPedido = producto.getExistencia();
-                }
+    private static void mostrarPedidos(List<Pedido> pedidos) {
+        for (Pedido pedido : pedidos) {
+            System.out.println("Pedido del cliente " + pedido.getIdCliente());
+            List<Producto> productos = pedido.getProductos();
+            for (Producto producto : productos) {
+                System.out.println("Producto " + producto.getId() + " - Cantidad: " + producto.getStock());
             }
         }
-        return maxPedido;
     }
-    
-    private static void imprimirVector(int[] vector) {
-        for (int i=0; i<vector.length; i++) {
-            System.out.print(vector[i] + " ");
-        }
-        System.out.println();
-    }
-
 }
